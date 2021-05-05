@@ -84,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
 
 
                 System.out.println("PHOTO URI: "+photoURI);
-                //takePictureIntent.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, photoURI);
+                takePictureIntent.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, photoURI);
                 //takePictureIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
             }
@@ -101,10 +101,11 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-        galleryAddPic();
+ //       galleryAddPic();
     }
 
     private void galleryAddPic() {
+
         Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
         System.out.println(currentPhoto);
         Uri contentUri = Uri.fromFile(currentPhoto);
