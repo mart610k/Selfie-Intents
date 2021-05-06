@@ -8,12 +8,14 @@ import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import java.io.File;
@@ -41,19 +43,18 @@ public class MainActivity extends AppCompatActivity {
         // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String imageFileName = "JPEG_" + timeStamp + "_";
-        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        //File storageDir = Environment.getExternalStorageDirectory();
+        //File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File storageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),"Intents");
 
         if(!storageDir.isDirectory()){
             storageDir.mkdirs();
         }
         System.out.println("FILE PATH:" + storageDir);
 
-        currentPhoto = File.createTempFile(
-                imageFileName,  /* prefix */
-                ".jpg",         /* suffix */
-                storageDir      /* directory */
-        );
+        currentPhoto = new File(
+            storageDir,
+            imageFileName + ".jpg"
+                 );
 
         return currentPhoto;
     }
@@ -82,10 +83,7 @@ public class MainActivity extends AppCompatActivity {
                         "dk.darkmtbg2.intents",
                         photoFile);
 
-
-                System.out.println("PHOTO URI: "+photoURI);
                 takePictureIntent.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, photoURI);
-                //takePictureIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
             }
         }
@@ -98,10 +96,7 @@ public class MainActivity extends AppCompatActivity {
             System.out.println(data.getData());
         }
 
-
-
-
- //       galleryAddPic();
+        galleryAddPic();
     }
 
     private void galleryAddPic() {
@@ -111,6 +106,7 @@ public class MainActivity extends AppCompatActivity {
         Uri contentUri = Uri.fromFile(currentPhoto);
         mediaScanIntent.setData(contentUri);
         this.sendBroadcast(mediaScanIntent);
+        ((ImageView)this.findViewById(R.id.imageview)).setImageBitmap(BitmapFactory.decodeFile(currentPhoto.getAbsolutePath()));
     }
 
 }
