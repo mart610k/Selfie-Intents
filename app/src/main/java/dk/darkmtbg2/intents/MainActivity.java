@@ -7,7 +7,9 @@ import androidx.core.content.FileProvider;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -43,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
     final int PERMISSION_REQUEST_CODE = 1337;
     Snackbar imageWasSavedCorrectly;
     Snackbar imageWasNotTaken;
+    AlertDialog.Builder builder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,23 +71,35 @@ public class MainActivity extends AppCompatActivity {
                                            int[] grantResults) {
         switch (requestCode) {
             case PERMISSION_REQUEST_CODE:
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0 &&
-                        grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // Permission is granted. Continue the action or workflow
-                    // in your app.
+                if(grantResults.length > 0) {
+                    for (int i : grantResults) {
+                        if (i != PackageManager.PERMISSION_GRANTED) {
+                            missingRights();
+                        }
+                    }
                 }  else {
-                    this.finish();
-                    // Explain to the user that the feature is unavailable because
-                    // the features requires a permission that the user has denied.
-                    // At the same time, respect the user's decision. Don't link to
-                    // system settings in an effort to convince the user to change
-                    // their decision.
+                    missingRights();
                 }
                 return;
         }
-        // Other 'case' lines to check for other
-        // permissions this app might request.
+    }
+
+    public void missingRights(){
+        builder = new AlertDialog.Builder(this);
+
+        builder.setMessage("This application requires both camera and storage access")
+                .setCancelable(false)
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        finish();
+                        Toast.makeText(getApplicationContext(),"missing rights to application, closing",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+        AlertDialog alert = builder.create();
+        alert.setTitle("AlertDialogExample");
+        alert.show();
     }
 
     public void selfieButtonCamera(View view){
