@@ -9,6 +9,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -45,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
     final int PERMISSION_REQUEST_CODE = 1337;
     Snackbar imageWasSavedCorrectly;
     Snackbar imageWasNotTaken;
+    Snackbar ioExceptionOccurred;
     AlertDialog.Builder builder;
 
     @Override
@@ -58,32 +60,34 @@ public class MainActivity extends AppCompatActivity {
 
         imageWasSavedCorrectly = Snackbar.make(findViewById(R.id.mainActivity), R.string.imageSavedToGallery, 5000);
         imageWasNotTaken = Snackbar.make(findViewById(R.id.mainActivity),R.string.imageNotToken,5000);
+        imageWasNotTaken = Snackbar.make(findViewById(R.id.mainActivity),R.string.ioExeceptionOccured,5000);
     }
 
     /**
-     * Returns after the method "requestPermissions" are called, returns the amount of permissions that were granted before closing.
+     * Returns after the method "requestPermissions" are called, returns the amount of permissions that were granted. if one of the permissions are denied then closes the application
      * @param requestCode
      * @param permissions
      * @param grantResults
      */
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                                           int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         switch (requestCode) {
             case PERMISSION_REQUEST_CODE:
                 if(grantResults.length > 0) {
+                    //Checks if all permissions required are granted
                     for (int i : grantResults) {
                         if (i != PackageManager.PERMISSION_GRANTED) {
                             missingRights();
                         }
                     }
-                }  else {
-                    missingRights();
                 }
                 return;
         }
     }
 
+    /**
+     * Called if required rights are missing, which shows a dialog box to the user, then exists the application on click.
+     */
     public void missingRights(){
         builder = new AlertDialog.Builder(this);
 
@@ -96,20 +100,32 @@ public class MainActivity extends AppCompatActivity {
                                 Toast.LENGTH_SHORT).show();
                     }
                 });
-
         AlertDialog alert = builder.create();
-        alert.setTitle("AlertDialogExample");
+        alert.setTitle("Missing Rights");
         alert.show();
     }
 
+
+    /**
+     * triggers the selfie camera in the intent request
+     * @param view the caller
+     */
     public void selfieButtonCamera(View view){
         dispatchTakePictureIntent(1);
     }
 
+    /**
+     * triggers the front camera in the intent request
+     * @param view the caller
+     */
     public void frontButtonCamera(View view){
         dispatchTakePictureIntent(0);
     }
 
+    /**
+     * Triggers the intent to take an image from the camera through a camera app
+     * @param cameraID the camera ID to start the camera on.
+     */
     public void dispatchTakePictureIntent(int cameraID) {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         // Ensure that there's a camera activity to handle the intent
@@ -120,16 +136,11 @@ public class MainActivity extends AppCompatActivity {
                 photoFile = FileService.createImageFile();
             } catch (IOException ex) {
                 // Error occurred while creating the File
-
+                ioExceptionOccurred.show();
             }
             // Continue only if the File was successfully created
             if (photoFile != null) {
-
-                Uri photoURI =
-                        FileProvider.getUriForFile(this,
-                        "dk.darkmtbg2.intents",
-                        photoFile);
-
+                Uri photoURI = FileService.getFileUriLocation(this,photoFile);
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
                 takePictureIntent.putExtra("android.intent.extras.CAMERA_FACING", cameraID);
                 startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
@@ -140,13 +151,18 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        System.out.println("I AM HERE????");
         switch (requestCode){
             case REQUEST_IMAGE_CAPTURE:
                 //resultcode 0 means that the image was not taken
                 switch (resultCode){
                     case -1:
-                        galleryAddPic();
+                        File file = FileService.getLatestImageGenerated();
+                        if (FileService.galleryAddPic(this,file)){
+                            
+                            ((ImageView)this.findViewById(R.id.imageview)).setImageBitmap(BitmapFactory.decodeFile(file.getAbsolutePath()));
+
+                            imageWasSavedCorrectly.show();
+                        }
                         break;
                     //resultcode 0 means that the image was not taken
                     case 0:
@@ -154,21 +170,12 @@ public class MainActivity extends AppCompatActivity {
                         imageWasNotTaken.show();
                         break;
                 }
+                break;
+            default:
+                break;
         }
     }
 
+    
 
-    private void galleryAddPic() {
-        File file = FileService.getLastestImageGenerated();
-        if(file != null){
-            Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-            System.out.println(file);
-            Uri contentUri = Uri.fromFile(file);
-            mediaScanIntent.setData(contentUri);
-            this.sendBroadcast(mediaScanIntent);
-            ((ImageView)this.findViewById(R.id.imageview)).setImageBitmap(BitmapFactory.decodeFile(file.getAbsolutePath()));
-
-            imageWasSavedCorrectly.show();
-        }
-    }
 }

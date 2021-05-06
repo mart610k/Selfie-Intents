@@ -2,4 +2,5 @@
     <string name="app_name">A-Intents</string>
     <string name="imageSavedToGallery">Image was Saved to gallery</string>
     <string name="imageNotToken">Image was not taken</string>
+    <string name="ioExeceptionOccured">File could not be created</string>
 </resources>
