@@ -2,27 +2,17 @@ package dk.darkmtbg2.intents;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
-import androidx.core.content.FileProvider;
 
 import android.Manifest;
-import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.ActivityNotFoundException;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.media.Image;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -30,15 +20,10 @@ import android.widget.Toast;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
-import dk.darkmtbg2.intents.service.FileService;
-
-import static android.os.Environment.getExternalStorageDirectory;
-import static android.provider.MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE;
+import dk.darkmtbg2.intents.service.FileServiceImp;
+import dk.darkmtbg2.intents.service.interfaces.FileService;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -48,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
     Snackbar imageWasNotTaken;
     Snackbar ioExceptionOccurred;
     AlertDialog.Builder builder;
+    FileService fileservice;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
         imageWasSavedCorrectly = Snackbar.make(findViewById(R.id.mainActivity), R.string.imageSavedToGallery, 5000);
         imageWasNotTaken = Snackbar.make(findViewById(R.id.mainActivity),R.string.imageNotToken,5000);
         imageWasNotTaken = Snackbar.make(findViewById(R.id.mainActivity),R.string.ioExeceptionOccured,5000);
+        fileservice = new FileServiceImp();
     }
 
     /**
@@ -133,14 +120,14 @@ public class MainActivity extends AppCompatActivity {
             // Create the File where the photo should go
             File photoFile = null;
             try {
-                photoFile = FileService.createImageFile();
+                photoFile = fileservice.createImageFile();
             } catch (IOException ex) {
                 // Error occurred while creating the File
                 ioExceptionOccurred.show();
             }
             // Continue only if the File was successfully created
             if (photoFile != null) {
-                Uri photoURI = FileService.getFileUriLocation(this,photoFile);
+                Uri photoURI = fileservice.getFileUriLocation(this,photoFile);
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
                 takePictureIntent.putExtra("android.intent.extras.CAMERA_FACING", cameraID);
                 startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
@@ -156,8 +143,8 @@ public class MainActivity extends AppCompatActivity {
                 //resultcode 0 means that the image was not taken
                 switch (resultCode){
                     case -1:
-                        File file = FileService.getLatestImageGenerated();
-                        if (FileService.galleryAddPic(this,file)){
+                        File file = fileservice.getLatestImageGenerated();
+                        if (fileservice.galleryAddPic(this,file)){
                             
                             ((ImageView)this.findViewById(R.id.imageview)).setImageBitmap(BitmapFactory.decodeFile(file.getAbsolutePath()));
 
@@ -175,7 +162,4 @@ public class MainActivity extends AppCompatActivity {
                 break;
         }
     }
-
-    
-
 }

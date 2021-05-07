@@ -12,16 +12,23 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class FileService {
+import dk.darkmtbg2.intents.service.interfaces.FileService;
 
-    private static File latestImageGenerated;
+public class FileServiceImp implements FileService {
+
+    private File latestImageGenerated;
+
+    public FileServiceImp(){
+
+    }
+
 
     /**
      * Creates an image and returns the created file.
      * @return the created file on the file system.
      * @throws IOException
      */
-    public static File createImageFile() throws IOException {
+    public File createImageFile() throws IOException {
         File currentPhoto;
         // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
@@ -42,7 +49,7 @@ public class FileService {
     }
 
 
-    public static File getLatestImageGenerated(){
+    public File getLatestImageGenerated(){
         return  latestImageGenerated;
     }
 
@@ -53,7 +60,7 @@ public class FileService {
      * @param file the file to handle.
      * @return
      */
-    public static boolean galleryAddPic(Context context, File file) {
+    public boolean galleryAddPic(Context context, File file) {
         if(file != null){
             Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
             Uri contentUri = getFileUriLocation(context,file);
@@ -71,7 +78,7 @@ public class FileService {
      * @param file the file to get the Uri to
      * @return the Uri from the file.
      */
-    public static Uri getFileUriLocation(Context context, File file)
+    public Uri getFileUriLocation(Context context, File file)
     {
         return FileProvider.getUriForFile(context, "dk.darkmtbg2.intents", file);
     }
